@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deteksi Kebakaran Hutan</title>
+
+    <!-- fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- icon -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <!-- Chart.js Gauge -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-gauge@0.4.0/dist/chartjs-gauge.min.js"></script>
+
+    <script
+      type="module"
+      src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"
+    ></script>
+    <script
+      type="module"
+      src="https://www.gstatic.com/firebasejs/9.17.2/firebase-database.js"
+    ></script>
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+      integrity="sha384-gZ7IYjJGSxhk8sLrnzoDLl0AblW8Zja+UtCFSfPFSZZUVqPPhbbVVRL0fxlH4ymG"
+      crossorigin=""
+    />
+
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+      integrity="sha384-mvPNTY2KpH5vRVTM8r/YBXQcrA/UcQlnf1B5+JvR9qP8tAAMZgGFD9GjtZnR1yLF"
+      crossorigin=""
+    ></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- my style -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <a href="#" class="navbar-logo">Deteksi <span>Kebakaran Hutan</span></a>
+      <div class="navbar-nav">
+        <a href="#home">Home</a>
+        <a href="#about">Info</a>
+        <a href="#deteksi">Monitoring</a>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+      <main class="content">
+        <h1>Deteksi <span>Kebakaran Hutan</span></h1>
+        <p>
+          "Pantau, Deteksi, dan Cegah Kebakaran Hutan dengan Teknologi
+          Terdepan!"
+        </p>
+        <a href="#deteksi" class="cta">Deteksi Sekarang</a>
+      </main>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+      <h2>Kebakaran Hutan</h2>
+      <div class="row">
+        <div class="aboutimg">
+          <img
+            src="{{ url_for('static', filename='about-1.jpg') }}"
+            alt="Kebakaran Hutan Kalimantan Timur"
+          />
+        </div>
+        <div class="content">
+          <h3>Kebakaran Hutan di Kalimantan Timur</h3>
+          <p>
+            Di musim panas yang jarang turun hujan, bahaya kebakaran lahan
+            semakin meningkat di sekitar wilayah Sangatta Utara, Kutai Timur
+            (Kutim). Kondisi kemarau dan ensitas hujan yang rendah telah
+            menciptakan lingkungan yang sangat rentan terhadap kebakaran.
+          </p>
+          <p>
+            Untuk mengantisipasi dan mengurangi risiko kebakaran lahan,
+            pemantauan dan peringatan dini sangat diperlukan. Sistem ini
+            membantu mendeteksi potensi kebakaran sejak dini.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detection Section -->
+    <section id="deteksi" class="deteksi">
+      <h2>Deteksi</h2>
+      <div id="connection-status" class="status-box"></div>
+
+      <div class="main-container">
+        <!-- Parameter Gauges -->
+        <div class="gauge-container">
+          <h3>Parameter</h3>
+          <div class="gauges">
+            <div class="gauge-box" id="temperatureGauge">
+              <canvas id="temperatureGaugeCanvas"></canvas>
+              <p>Suhu</p>
+              <p class="value" id="temp">-- °C</p>
+            </div>
+            <div class="gauge-box" id="humidityGauge">
+              <canvas id="humidityGaugeCanvas"></canvas>
+              <p>Kelembaban Udara</p>
+              <p class="value" id="humidity">-- %</p>
+            </div>
+            <div class="gauge-box" id="soilMoistureGauge">
+              <canvas id="soilMoistureGaugeCanvas"></canvas>
+              <p>Kelembaban Tanah</p>
+              <p class="value" id="soil">-- %</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Smoke Detection -->
+        <div class="asap-container">
+          <div class="smoke-detection-box">
+            <h4>Deteksi Asap</h4>
+            <img
+              id="smokeImage"
+              src="{{ url_for('static', filename='asap.png') }}"
+              alt="Asap"
+            />
+            <p id="smokeStatus">Menunggu deteksi...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="statistik">
+        <h1>Statistik</h1>
+        <div class="statistik-container">
+          <div class="statistik-box">
+            <h4>Suhu</h4>
+            <div class="chart-scroll-container">
+              <canvas id="temperatureChart"></canvas>
+            </div>
+          </div>
+          <div class="statistik-box">
+            <h4>Kelembaban Udara</h4>
+            <div class="chart-scroll-container">
+              <canvas id="humidityChart"></canvas>
+            </div>
+          </div>
+          <div class="statistik-box">
+            <h4>Kelembaban Tanah</h4>
+            <div class="chart-scroll-container">
+              <canvas id="soilMoistureChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fire Status -->
+      <section id="fireStatusSection" class="fire-status">
+        <h2>Status Kebakaran Hutan</h2>
+        <div id="fireIndicator" class="fire-indicator">
+          <div class="indicator-bar" id="indicatorBar"></div>
+        </div>
+        <p id="fireStatus" class="status-text">Aman</p>
+      </section>
+    </section>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        onValue,
+      } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDi8D29ieh8D99GqxN6E0KtectCEHO8sWo",
+        authDomain: "iot-kebakaranhutan.firebaseapp.com",
+        databaseURL:"https://iot-kebakaranhutan-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "iot-kebakaranhutan",
+        storageBucket: "iot-kebakaranhutan.firebasestorage.app",
+        messagingSenderId: "237810608061",
+        appId: "1:237810608061:web:62b88ae26c294433e314d4",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
+
+      // References for sensor data and prediction
+      const sensorDataRef = ref(database, "/sensor_data");
+      const predictionRef = ref(database, "/predict");
+
+      // Initialize charts and gauges
+      let temperatureChart, humidityChart, soilMoistureChart;
+      let temperatureGauge, humidityGauge, soilMoistureGauge;
+
+      // Initialize charts when document is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        initializeCharts();
+        initializeGauges();
+      });
+
+      // Listen for sensor data updates
+      onValue(sensorDataRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          updateGauges(data);
+          updateCharts(data);
+          document.getElementById("temp").textContent = `${
+            data.temp || "--"
+          } °C`;
+          document.getElementById("humidity").textContent = `${
+            data.humidity || "--"
+          } %`;
+          document.getElementById("soil").textContent = `${
+            data.soil_moisture || "--"
+          } %`;
+        }
+      });
+
+      // Listen for prediction updates
+      onValue(predictionRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          updateFireStatus(data.prediction);
+        }
+      });
+
+      function updateFireStatus(prediction) {
+        const indicatorBar = document.getElementById("indicatorBar");
+        const statusText = document.getElementById("fireStatus");
+        const smokeStatus = document.getElementById("smokeStatus");
+
+        if (prediction === 1) {
+          indicatorBar.style.width = "100%";
+          indicatorBar.style.backgroundColor = "rgba(255, 0, 0, 0.8)";
+          statusText.textContent = "BAHAYA - Terdeteksi Kebakaran!";
+          statusText.style.color = "#ff0000";
+          smokeStatus.textContent = "Asap Terdeteksi!";
+        } else {
+          indicatorBar.style.width = "20%";
+          indicatorBar.style.backgroundColor = "rgba(0, 255, 0, 0.5)";
+          statusText.textContent = "Aman";
+          statusText.style.color = "#00ff00";
+          smokeStatus.textContent = "Tidak Ada Asap";
+        }
+      }
+
+      // Chart initialization functions would go here
+      function initializeCharts() {
+        // Implementation for chart initialization
+      }
+
+      function initializeGauges() {
+        // Implementation for gauge initialization
+      }
+
+      function updateCharts(data) {
+        // Implementation for updating charts
+      }
+
+      function updateGauges(data) {
+        // Implementation for updating gauges
+      }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom JavaScript -->
+    <script type="module" src="/static/js/script.js"></script>
+
+    <!-- Tambahkan file JavaScript Anda -->
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/script.js') }}"
+    ></script>
+
+    <script>
+      feather.replace();
+    </script>
+    <script src="{{ url_for('static', filename='js\charts.js') }}"></script>
+  </body>
+</html>
